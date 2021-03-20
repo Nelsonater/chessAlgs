@@ -1,4 +1,4 @@
-from graphics import GraphWin, Rectangle, Point
+from graphics import GraphWin, Rectangle, Point, Text
 from board import Board
 
 WIDTH = 800
@@ -19,9 +19,16 @@ def drawBoard(board, win):
             rect.setFill('blue') if i%2 == 0 else rect.setFill('green')
         else:
             rect.setFill('blue') if i%2 == 1 else rect.setFill('green')
+        rect.draw(win)
 
         # TODO: Draw piece sprites using board.getTile
-        rect.draw(win)
+        piece = board.getTile(i)
+        if piece != 0:
+            pixWidth = i_file*tileWidth+tileWidth/2
+            pixHeight = i_rank*tileHeight+tileHeight/2
+            print (f"Drawing at ({pixWidth}, {pixHeight})")
+            message = Text(Point(i_file*tileWidth+tileWidth/2, i_rank*tileHeight+tileHeight/2), piece)
+            message.draw(win)
         
 def main():
     myboard = Board()
@@ -30,7 +37,7 @@ def main():
     drawBoard(myboard, win)
     win.getMouse()
     print(myboard.getTile('a1'))
-    print(myboard.getTile(56))
+    print(myboard.getTile(48))
     win.close()
 
 main()
