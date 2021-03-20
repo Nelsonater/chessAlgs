@@ -60,7 +60,7 @@ class Board:
     
     def movePiece(self, tile1, tile2):
         if self.legalMove(tile1, tile2):
-            self.tiles[tile2] = tile1
+            self.tiles[tile2] = self.getTile(tile1)
             self.tiles[tile1] = 0
     
     def legalMove(self, tile1, tile2):

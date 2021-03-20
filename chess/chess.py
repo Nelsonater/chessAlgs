@@ -1,8 +1,9 @@
 from graphics import GraphWin, Rectangle, Point, Text, color_rgb
 from board import Board
+import time
 
-WIDTH = 800
-HEIGHT = 800
+WIDTH = 600
+HEIGHT = 600
 
 def drawBoard(board, win):
     tileWidth = WIDTH/board.boardWidth
@@ -23,17 +24,33 @@ def drawBoard(board, win):
         # TODO: Draw piece sprites using board.getTile
         piece = board.getTile(i)
         if piece != 0:
-            pixWidth = i_file*tileWidth+tileWidth/2
-            pixHeight = i_rank*tileHeight+tileHeight/2
             message = Text(Point(i_file*tileWidth+tileWidth/2, i_rank*tileHeight+tileHeight/2), piece)
             message.draw(win)
+
+def getNextMove(board, win):
+    while True:
+        p = win.getMouse()
+        mouseFile = int(p.getX() / (WIDTH/board.boardWidth))
+        mouseRank = int(p.getY() / (HEIGHT/board.boardWidth))
+        tile1 = mouseRank*board.boardWidth + mouseFile
+        if board.getTile(tile1) != 0:
+            break
+    p = win.getMouse()
+    mouseFile = int(p.getX() / (WIDTH/board.boardWidth))
+    mouseRank = int(p.getY() / (HEIGHT/board.boardWidth))
+    tile2 = mouseRank*board.boardWidth + mouseFile
+    board.movePiece(tile1, tile2)
+    # print (f"({p.getX()}, {p.getY()}) -> ({mouseFile}, {mouseRank})")
         
 def main():
     myboard = Board()
     myboard.printBoard()
     win = GraphWin('Chess', WIDTH, HEIGHT)
-    drawBoard(myboard, win)
-    win.getMouse()
+    while not win.isClosed():
+        drawBoard(myboard, win)
+        getNextMove(myboard, win)
+        win.update()
+        time.sleep(.1)
     win.close()
 
 main()
