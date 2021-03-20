@@ -49,6 +49,9 @@ class Board:
         tile += (self.boardWidth - int(pos[1]))*self.boardWidth
         return self.tiles[tile]
     
+    def getTileColor(self, tile1):
+        return 'w' if self.getTile(tile1).isupper() else 'b'
+    
     def printBoard(self):
         """ Debug tool to print board to console """
         rank = ''
@@ -59,13 +62,121 @@ class Board:
                 rank = ''
     
     def movePiece(self, tile1, tile2):
-        if self.legalMove(tile1, tile2):
+        if self.isLegalMove(tile1, tile2):
             self.tiles[tile2] = self.getTile(tile1)
             self.tiles[tile1] = 0
     
-    def legalMove(self, tile1, tile2):
-        """ Will one day run checks if piece on tile1 can move to tile2. For now it's anarchy baby """
-        return True
+    def isLegalMove(self, tile1, tile2):
+        """ Checks if tile2 is a legal move for the piece on tile1 """
+        return True if tile2 in self.getLegalMoves(tile1) else False
+    
+    def getLegalMoves(self, tile1):
+        """ Returns an array of all available legal moves for a given piece, by tile index """
+        moves = []
+        piece = self.getTile(tile1)
+        if piece != 0:
+            if piece == 'p':
+                # Black pawn
+                # They can move 1 square down so long as it isn't blocked
+                if self.getTile(tile1+self.boardWidth) == 0:
+                    moves.append(tile1+self.boardWidth)
+                # They can attack diagonally if tile is occupied by enemy
+                if self.getTile(tile1+self.boardWidth+1) != 0 and self.getTile(tile1+self.boardWidth+1).isupper():
+                    moves.append(tile1+self.boardWidth+1)
+                if self.getTile(tile1+self.boardWidth-1) != 0 and self.getTile(tile1+self.boardWidth-1).isupper():
+                    moves.append(tile1+self.boardWidth-1)
+                # TODO: They can move 2 tiles if on original rank
+            elif piece == 'P':
+                # White pawn
+                # They can move 1 square up so long as it isn't blocked
+                if self.getTile(tile1-self.boardWidth) == 0:
+                    moves.append(tile1-self.boardWidth)
+                # They can attack diagonally if tile is occupied by enemy
+                if self.getTile(tile1-self.boardWidth+1) != 0 and self.getTile(tile1-self.boardWidth+1).islower():
+                    moves.append(tile1-self.boardWidth+1)
+                if self.getTile(tile1-self.boardWidth-1) != 0 and self.getTile(tile1-self.boardWidth-1).islower():
+                    moves.append(tile1-self.boardWidth-1)
+            elif piece.lower() == 'r':
+                # Rook
+                # Rooks can move infinitely in straight lines until board edge or non empty tile
+                # Check all tiles to the right
+                markerTile = tile1
+                while (markerTile+1 < len(self.tiles)) and self.getTile(markerTile+1) == 0 and (markerTile+1)%self.boardWidth != 0:
+                    markerTile += 1
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile+1 < len(self.tiles)) and (markerTile+1)%self.boardWidth != 0 and self.getTileColor(markerTile+1) != self.getTileColor(tile1):
+                    moves.append(markerTile+1)
+                # Check all tiles to the left
+                markerTile = tile1
+                while (markerTile-1 >= 0) and self.getTile(markerTile-1) == 0 and (markerTile-1)%self.boardWidth != self.boardWidth-1:
+                    markerTile -= 1
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile-1 >= 0) and (markerTile-1)%self.boardWidth != self.boardWidth-1 and self.getTileColor(markerTile-1) != self.getTileColor(tile1):
+                    moves.append(markerTile-1)
+                # Check all tiles below
+                markerTile = tile1
+                while (markerTile+8 < len(self.tiles)) and self.getTile(markerTile+8) == 0:
+                    markerTile += 8
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile+8 < len(self.tiles)) and self.getTileColor(markerTile+8) != self.getTileColor(tile1):
+                    moves.append(markerTile+8)
+                # Check all tiles above
+                markerTile = tile1
+                while (markerTile-8 >= 0) and self.getTile(markerTile-8) == 0:
+                    markerTile -= 8
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile-8 >= 0) and self.getTileColor(markerTile-8) != self.getTileColor(tile1):
+                    moves.append(markerTile-8)
+            elif piece.lower() == 'n':
+                # Knight
+                print('night')
+            elif piece.lower() == 'b':
+                # Bishop
+                # Bishops move infinitely in diagonal lines until board edge or non empty tile
+                # Check all tiles up and to right
+                markerTile = tile1
+                while (markerTile-self.boardWidth+1 >= 0) and self.getTile(markerTile-self.boardWidth+1) == 0 and (markerTile-self.boardWidth+1)%self.boardWidth != 0:
+                    markerTile -= self.boardWidth+1
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile-self.boardWidth+1)%self.boardWidth != 0 and self.getTileColor(markerTile-self.boardWidth+1) != self.getTileColor(tile1) and (markerTile-self.boardWidth+1 >= 0):
+                    moves.append(markerTile-self.boardWidth+1)
+                # Check all tiles up and to left
+                markerTile = tile1
+                while (markerTile-self.boardWidth-1 < len(self.tiles)) and self.getTile(markerTile-self.boardWidth-1) == 0 and (markerTile-self.boardWidth-1)%self.boardWidth != 0 and (markerTile-self.boardWidth-1 >= 0):
+                    markerTile -= self.boardWidth-1
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile-self.boardWidth-1 < len(self.tiles)) and (markerTile-self.boardWidth-1)%self.boardWidth != 0 and self.getTileColor(markerTile-self.boardWidth-1) != self.getTileColor(tile1) and (markerTile-self.boardWidth-1 >= 0):
+                    moves.append(markerTile-self.boardWidth-1)
+                # Check all tiles down and to right
+                markerTile = tile1
+                while (markerTile+self.boardWidth+1 < len(self.tiles)) and self.getTile(markerTile+self.boardWidth+1) == 0 and (markerTile+self.boardWidth+1)%self.boardWidth != 0 and (markerTile+self.boardWidth+1 >= 0):
+                    markerTile += self.boardWidth+1
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile+self.boardWidth+1 < len(self.tiles)) and (markerTile+self.boardWidth+1)%self.boardWidth != 0 and self.getTileColor(markerTile+self.boardWidth+1) != self.getTileColor(tile1) and (markerTile+self.boardWidth+1 >= 0):
+                    moves.append(markerTile+self.boardWidth+1)
+                # Check all tiles down and to left
+                markerTile = tile1
+                while (markerTile+self.boardWidth-1 < len(self.tiles)) and self.getTile(markerTile+self.boardWidth-1) == 0 and (markerTile+self.boardWidth-1)%self.boardWidth != 0 and (markerTile+self.boardWidth-1 >= 0):
+                    markerTile += self.boardWidth-1
+                    moves.append(markerTile)
+                # If check ended because it ran into an enemy, add them to the legal move list
+                if (markerTile+self.boardWidth-1 < len(self.tiles)) and (markerTile+self.boardWidth-1)%self.boardWidth != 0 and self.getTileColor(markerTile+self.boardWidth-1) != self.getTileColor(tile1) and (markerTile+self.boardWidth-1 >= 0):
+                    moves.append(markerTile+self.boardWidth-1)
+            elif piece.lower() == 'k':
+                # King
+                print('bossman')
+            elif piece.lower() == 'q':
+                # Queen
+                print('dama')
+        return moves
+
 
     def importFEN(self, fen):
         """ Imports a new board position starting at a given fen string """
