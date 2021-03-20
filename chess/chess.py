@@ -26,10 +26,11 @@ def drawBoard(board, win):
 def main():
     myboard = Board()
     myboard.printBoard()
-    # win = GraphWin('Chess', WIDTH, HEIGHT)
-    # drawBoard(myboard, win)
-    # win.getMouse()
+    win = GraphWin('Chess', WIDTH, HEIGHT)
+    drawBoard(myboard, win)
+    win.getMouse()
     print(myboard.getTile('a1'))
-    # win.close()
+    print(myboard.getTile(56))
+    win.close()
 
 main()
