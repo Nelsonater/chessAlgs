@@ -1,4 +1,4 @@
-from graphics import GraphWin, Rectangle, Point, Text
+from graphics import GraphWin, Rectangle, Point, Text, color_rgb
 from board import Board
 
 WIDTH = 800
@@ -14,11 +14,10 @@ def drawBoard(board, win):
         i_rank = int(i/board.boardWidth)
 
         rect = Rectangle(Point(i_file*tileWidth, i_rank*tileHeight), Point((i_file+1)*tileWidth, (i_rank+1)*tileHeight))
-        # TODO: Pick prettier color scheme
         if i_rank%2 == 0:
-            rect.setFill('blue') if i%2 == 0 else rect.setFill('green')
+            rect.setFill(color_rgb(241, 217, 181)) if i%2 == 0 else rect.setFill(color_rgb(181, 136, 99))
         else:
-            rect.setFill('blue') if i%2 == 1 else rect.setFill('green')
+            rect.setFill(color_rgb(181, 136, 99)) if i%2 == 0 else rect.setFill(color_rgb(241, 217, 181))
         rect.draw(win)
 
         # TODO: Draw piece sprites using board.getTile
