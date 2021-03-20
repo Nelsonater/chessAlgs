@@ -94,4 +94,11 @@ class Board:
                     continue
                 self.tiles[i*8+j] = t
                 j += 1
-
+    
+    def outputFEN(self):
+        fen = self.outputPlacementString()
+        fen = f'{fen} {self.active} {self.castling} {self.enpassant} {self.halfmove} {self.fullmove}'
+        return fen
+    
+    def outputPlacementString(self):
+        return "8/8/8/8/8/8/8/8"

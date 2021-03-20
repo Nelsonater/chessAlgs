@@ -1,4 +1,4 @@
-from graphics import GraphWin, Rectangle, Point, Text, color_rgb
+from graphics import GraphWin, Rectangle, Point, Text, color_rgb, Image
 from board import Board
 import time
 
@@ -24,8 +24,12 @@ def drawBoard(board, win):
         # TODO: Draw piece sprites using board.getTile
         piece = board.getTile(i)
         if piece != 0:
-            message = Text(Point(i_file*tileWidth+tileWidth/2, i_rank*tileHeight+tileHeight/2), piece)
-            message.draw(win)
+            if piece == 'p' or piece == 'P':
+                pawn = Image(Point(i_file*tileWidth+tileWidth/2, i_rank*tileHeight+tileHeight/2), 'chess/img/pawn.png')
+                pawn.draw(win)
+            else:
+                message = Text(Point(i_file*tileWidth+tileWidth/2, i_rank*tileHeight+tileHeight/2), piece)
+                message.draw(win)
 
 def getNextMove(board, win):
     while True:
