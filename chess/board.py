@@ -1,24 +1,29 @@
 class Board:
     def __init__(self, boardwidth=8):
-        """ Board is essentially represented by a list of Integers
+        """ Board is essentially represented by a list of chars
         I chose to represent this a 2d array starting at a8 (top left) and ending h1 (bottom right)
         Even though it hurt my brain a little, this system matches fen better so :shrug:
 
-        0  - Empty
-        1  - WKing
-        2  - WQueen
-        3  - WBishop
-        4  - WKnight
-        5  - WRook
-        6  - WPawn
-        7  - BKing
-        8  - BQueen
-        9  - BBishop
-        10 - BKnight
-        11 - BRook
-        12 - BPawn """
+        0 - Empty
+        K - WKing
+        Q - WQueen
+        B - WBishop
+        N - WKnight
+        R - WRook
+        P - WPawn
+        k - BKing
+        q - BQueen
+        b - BBishop
+        n - BKnight
+        r - BRook
+        p - BPawn """
         self.boardWidth = boardwidth
         self.tiles = [0] * self.boardWidth * self.boardWidth
+        self.active = 'w'
+        self.castling = 'KQkq'
+        self.enpassant = '-'
+        self.halfmove = '0'
+        self.fullmove = '1'
         self.initializeBoard()
 
     def initializeBoard(self):
@@ -52,7 +57,15 @@ class Board:
             if i % self.boardWidth == 0:
                 print(rank)
                 rank = ''
-
+    
+    def movePiece(self, tile1, tile2):
+        if self.legalMove(tile1, tile2):
+            self.tiles[tile2] = tile1
+            self.tiles[tile1] = 0
+    
+    def legalMove(self, tile1, tile2):
+        """ Will one day run checks if piece on tile1 can move to tile2. For now it's anarchy baby """
+        return True
 
     def importFEN(self, fen):
         """ Imports a new board position starting at a given fen string """
@@ -60,14 +73,25 @@ class Board:
         placement = splitfen[0]
         self.importPlacementString(placement)
         activeplayer = splitfen[1]
+        self.active = activeplayer
         castling = splitfen[2]
+        self.castling = castling
         enpassant = splitfen[3]
+        self.enpassant = enpassant
         halfmove = splitfen[4]
+        self.halfmove = halfmove
         fullmove = splitfen[5]
+        self.fullmove = fullmove
 
     def importPlacementString(self, placement):
         """ Given the first part of a fen string, will assign the tiles with the proper pieces """
-        print("TBI")
-        self.tiles[48] = 1
-        self.tiles[56] = 5
+        ranks = placement.split('/')
+        for i, r in enumerate(ranks):
+            j = 0
+            for t in r:
+                if t.isdigit():
+                    j += int(t)
+                    continue
+                self.tiles[i*8+j] = t
+                j += 1
 

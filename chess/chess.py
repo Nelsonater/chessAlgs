@@ -26,7 +26,6 @@ def drawBoard(board, win):
         if piece != 0:
             pixWidth = i_file*tileWidth+tileWidth/2
             pixHeight = i_rank*tileHeight+tileHeight/2
-            print (f"Drawing at ({pixWidth}, {pixHeight})")
             message = Text(Point(i_file*tileWidth+tileWidth/2, i_rank*tileHeight+tileHeight/2), piece)
             message.draw(win)
         
@@ -36,8 +35,6 @@ def main():
     win = GraphWin('Chess', WIDTH, HEIGHT)
     drawBoard(myboard, win)
     win.getMouse()
-    print(myboard.getTile('a1'))
-    print(myboard.getTile(48))
     win.close()
 
 main()
