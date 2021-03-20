@@ -39,17 +39,17 @@ class Board:
             return self.tiles[pos]
         # Get ascii value of first char in pos string; a=97, b=98, etc. to calc the file
         tile = ord(pos[0])-97
-        # Subtract the rank int from second char from boardWidth (which is also the height in this case, cause we index top left to bottom right) Also subtract 1 because the list is zero indexed
+        # Subtract the rank int from second char from boardWidth (which is also the height in this case, cause we index top left to bottom right)
         # Multiply the result by boardwidth to adjust for the 2d tiles list
-        tile += (self.boardWidth - int(pos[1]) - 1)*self.boardWidth
+        tile += (self.boardWidth - int(pos[1]))*self.boardWidth
         return self.tiles[tile]
     
     def printBoard(self):
         """ Debug tool to print board to console """
         rank = ''
         for i, t in enumerate(self.tiles):
-            rank = rank.join(str(t))
-            if i % self.boardWidth:
+            rank = str(t) + ' ' + rank 
+            if i % self.boardWidth == 0:
                 print(rank)
                 rank = ''
 
@@ -68,5 +68,6 @@ class Board:
     def importPlacementString(self, placement):
         """ Given the first part of a fen string, will assign the tiles with the proper pieces """
         print("TBI")
+        self.tiles[48] = 1
         self.tiles[56] = 5
 
