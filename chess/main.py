@@ -1,4 +1,5 @@
 from graphics import GraphWin, Rectangle, Point, Text, color_rgb, Image, Circle
+from bot_random import ChessRandom
 from board import Board
 import time
 
@@ -86,15 +87,27 @@ def getNextMove(board, win):
     tile2 = mouseRank*board.boardWidth + mouseFile
     board.movePiece(tile1, tile2)
     # print (f"({p.getX()}, {p.getY()}) -> ({mouseFile}, {mouseRank})")
+
+def drawCheckmate(board, win):
+    message = Text(Point(WIDTH/2, HEIGHT/2), "Checkmate!")
+    message.draw(win)
+    win.getMouse()
         
 def main():
     myboard = Board()
-    myboard.printBoard()
+    comp = ChessRandom(myboard, 'b')
+    print(myboard.outputFEN())
     win = GraphWin('Chess', WIDTH, HEIGHT)
     while not win.isClosed():
         drawBoard(myboard, win)
-        getNextMove(myboard, win)
-        print(myboard.allLegalMoves(True))
+        if myboard.isCheckmate:
+            print("Checkmate!")
+            drawCheckmate(myboard, win)
+        if myboard.active == 'w':
+            getNextMove(myboard, win)
+        else:
+            comp.nextMove()
+        # print(myboard.allLegalMoves(True))
         win.update()
         time.sleep(.1)
     win.close()

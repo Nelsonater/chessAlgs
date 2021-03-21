@@ -24,6 +24,7 @@ class Board:
         self.enpassant = '-'
         self.halfmove = '0'
         self.fullmove = '1'
+        self.isCheckmate = False
         self.initializeBoard()
 
     def initializeBoard(self):
@@ -71,6 +72,8 @@ class Board:
             self.active = 'w' if self.active == 'b' else 'b'
             self.tiles[tile2] = self.getTile(tile1)
             self.tiles[tile1] = 0
+            if len([x for x in self.allLegalMoves().values() if len(x) > 0]) == 0:
+                self.isCheckmate = True
     
     def isLegalMove(self, tile1, tile2):
         """ Checks if tile2 is a legal move for the piece on tile1 """
@@ -80,7 +83,9 @@ class Board:
         moves = {}
         for i, t in enumerate(self.tiles):
             if self.getTileColor(i) == self.active:
-                moves[i] = (self.getLegalMoves(i, discAtk))
+                legalMoves = self.getLegalMoves(i, discAtk)
+                if len(legalMoves) > 0:
+                    moves[i] = legalMoves
         if pretty:
             # There's a fancy pythonic way to implement this...should fix soon(tm)
             moveNotation = []
@@ -111,9 +116,9 @@ class Board:
                 if self.getTile(tile1+self.boardWidth) == 0:
                     moves.append(tile1+self.boardWidth)
                 # They can attack diagonally if tile is occupied by enemy
-                if self.getTile(tile1+self.boardWidth+1) != 0 and self.getTile(tile1+self.boardWidth+1).isupper():
+                if self.getTile(tile1+self.boardWidth+1) != 0 and self.getTile(tile1+self.boardWidth+1).isupper() and (tile1+self.boardWidth+1)%self.boardWidth != 0 :
                     moves.append(tile1+self.boardWidth+1)
-                if self.getTile(tile1+self.boardWidth-1) != 0 and self.getTile(tile1+self.boardWidth-1).isupper():
+                if self.getTile(tile1+self.boardWidth-1) != 0 and self.getTile(tile1+self.boardWidth-1).isupper() and (tile1+self.boardWidth-1)%self.boardWidth != self.boardWidth-1 :
                     moves.append(tile1+self.boardWidth-1)
                 # They can move 2 tiles if on original rank
                 if tile1 >= self.boardWidth and tile1 < 2*self.boardWidth:
@@ -332,9 +337,7 @@ class Board:
         # These checks could've/should've been done when being originally added to the list but that mess is
         # already spaghetti enough and O(2n) == O(n) I think idk
         if discAtk:
-            for move in moves:
-                if self.isInCheck(tile1, move):
-                    moves.remove(move)
+            return [ x for x in moves if not self.isInCheck(tile1, x)]
         return moves
     
     def isInCheck(self, tile1, tile2):
@@ -352,12 +355,13 @@ class Board:
         for i, t in enumerate(self.tiles):
             if self.getTile(i) == 'k' or self.getTile(i) == 'K':
                 movelist = self.allLegalMoves(False, False)
-                if i in movelist.values():
+                # if i in movelist.values():
+                if i in {x for v in movelist.values() for x in v}:
                     self.active = 'w' if self.active == 'b' else 'b'
                     self.tiles[tile1] = t1_piece
                     self.tiles[tile2] = t2_piece
-                    print(f"Potential Check! If {self.indexToNotation(tile2, tile1)}")
-                    print(movelist)
+                    # print(f"Potential Check! If {self.indexToNotation(tile2, tile1)}")
+                    # print(movelist)
                     return True
         
         self.active = 'w' if self.active == 'b' else 'b'
