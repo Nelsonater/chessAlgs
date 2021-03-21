@@ -399,4 +399,20 @@ class Board:
         return fen
     
     def outputPlacementString(self):
-        return "8/8/8/8/8/8/8/8"
+        placement = ""
+        for r in range(self.boardWidth):
+            counter = 0
+            for f in range(self.boardWidth):
+                piece = self.getTile(r*self.boardWidth+f)
+                if piece == 0:
+                    counter += 1
+                    continue
+                else:
+                    placement += str(counter) if counter > 0 else ""
+                    counter = 0
+                    placement += piece
+            placement += str(counter) if counter > 0 else ""
+            placement += "/"
+        placement = placement[:-1]
+
+        return placement
