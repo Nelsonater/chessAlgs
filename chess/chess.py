@@ -77,7 +77,7 @@ def getNextMove(board, win):
         mouseFile = int(p.getX() / (WIDTH/board.boardWidth))
         mouseRank = int(p.getY() / (HEIGHT/board.boardWidth))
         tile1 = mouseRank*board.boardWidth + mouseFile
-        if board.getTile(tile1) != 0:
+        if board.getTile(tile1) != 0 and len(board.getLegalMoves(tile1)) > 0:
             drawLegalMoves(board, win, tile1)
             break
     p = win.getMouse()
@@ -94,6 +94,7 @@ def main():
     while not win.isClosed():
         drawBoard(myboard, win)
         getNextMove(myboard, win)
+        print(myboard.allLegalMoves(True))
         win.update()
         time.sleep(.1)
     win.close()
