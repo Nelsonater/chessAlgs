@@ -1,3 +1,20 @@
+import math
+"""
+
+TO IMPLEMENT:
+board.py
+    Castling
+    Drawing
+    En passant
+    50 move rule
+    I'm pretending like I don't 100% know I've made a lot of time complexity efficiency errors in this codebase
+    that will definitely bite me in the ass at scale when training future AI. pls fix
+main.py
+    make rendering less shit
+bot_random.py
+    inherit from base AI class
+
+"""
 class Board:
     def __init__(self, boardwidth=8):
         """ Board is essentially represented by a list of chars
@@ -24,7 +41,16 @@ class Board:
         self.enpassant = '-'
         self.halfmove = '0'
         self.fullmove = '1'
-        self.isCheckmate = False
+        # Keeps track of the starting index of the "castling rooks"
+        self.castlingrooks = {}
+        # Generated list of moves a king could castle to
+        self.castlingmoves = []
+        # gamestate var to track if game 
+        # 0 - Playing
+        # 1 - Black checkmate
+        # 2 - White checkmate
+        # 3 - Draw
+        self.gamestate = 0
         self.initializeBoard()
 
     def initializeBoard(self):
@@ -32,6 +58,22 @@ class Board:
         # If given boardWidth was 8, use standard starting pos, otherwise empty
         if self.boardWidth == 8:
             self.importFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+        for i, t in enumerate(self.tiles):
+            if t == 'K':
+                for j in range(i, i+self.boardWidth):
+                    if j >= 0 and j < len(self.tiles) and self.getTile(j) == 'R':
+                        self.castlingrooks['wk'] = j
+                for j in range(i-self.boardWidth, i):
+                    if j >= 0 and j < len(self.tiles) and self.getTile(j) == 'R':
+                        self.castlingrooks['wq'] = j
+            if t == 'k':
+                for j in range(i, i+self.boardWidth):
+                    if j >= 0 and j < len(self.tiles) and self.getTile(j) == 'r':
+                        self.castlingrooks['bk'] = j
+                for j in range(i-self.boardWidth, i):
+                    if j >= 0 and j < len(self.tiles) and self.getTile(j) == 'r':
+                        self.castlingrooks['bq'] = j
+
 
     # Ex. C5 - pos first gets set to '2' because ord('c')-97 is 2
     #     Then if we assume boardWidth of 8, 8-5-1 = 2
@@ -58,8 +100,13 @@ class Board:
             return
         return 'w' if self.getTile(tile1).isupper() else 'b'
     
+    def setTile(self, tile1, piece):
+        if tile1 >= 0 and tile1 < len(self.tiles):
+            self.tiles[tile1] = piece
+    
     def printBoard(self):
         """ Debug tool to print board to console """
+        # TODO: Fix, make it look better, build and return a string instead of printing
         rank = ''
         for i, t in enumerate(self.tiles):
             rank = str(t) + ' ' + rank 
@@ -69,11 +116,50 @@ class Board:
     
     def movePiece(self, tile1, tile2):
         if self.isLegalMove(tile1, tile2):
+            # Remove castling rights if king moves
+            if self.getTile(tile1) == 'K':
+                self.castling = self.castling.replace('K', '')
+                self.castling = self.castling.replace('Q', '')
+            if self.getTile(tile1) == 'k':
+                self.castling = self.castling.replace('k', '')
+                self.castling = self.castling.replace('q', '')
+            # Remove castling rights if the closest rook to the king moves or dies
+            if tile1 == self.castlingrooks['wq'] or tile2 == self.castlingrooks['wq']:
+                self.castling.replace('Q', '')
+            if tile1 == self.castlingrooks['wk'] or tile2 == self.castlingrooks['wk']:
+                self.castling.replace('K', '')
+            if tile1 == self.castlingrooks['bk'] or tile2 == self.castlingrooks['bk']:
+                self.castling.replace('k', '')
+            if tile1 == self.castlingrooks['bq'] or tile2 == self.castlingrooks['bq']:
+                self.castling.replace('q', '')
+
+            # King just castled
+            if self.getTile(tile1).lower() == 'k' and tile2 in self.castlingmoves:
+                self.setTile(tile2, self.getTile(tile1))
+                self.setTile(tile1, 0)
+                # Kingside black castle
+                if tile2 > tile1 and self.active == 'b':
+                    self.setTile(tile2-1, 'r')
+                    self.setTile(self.castlingrooks['bk'], 0)
+                # Queenside black castle
+                if tile2 < tile1 and self.active == 'b':
+                    self.setTile(tile2+1, 'r')
+                    self.setTile(self.castlingrooks['bq'], 0)
+                # Kingside white castle
+                if tile2 > tile1 and self.active == 'w':
+                    self.setTile(tile2-1, 'R')
+                    self.setTile(self.castlingrooks['wk'], 0)
+                # Queenside black castle
+                if tile2 < tile1 and self.active == 'w':
+                    self.setTile(tile2+1, 'R')
+                    self.setTile(self.castlingrooks['wq'], 0)
+            else:
+                self.setTile(tile2, self.getTile(tile1))
+                self.setTile(tile1, 0)
+
             self.active = 'w' if self.active == 'b' else 'b'
-            self.tiles[tile2] = self.getTile(tile1)
-            self.tiles[tile1] = 0
             if len([x for x in self.allLegalMoves().values() if len(x) > 0]) == 0:
-                self.isCheckmate = True
+                self.gamestate = 1 if self.active == 'w' else 2
     
     def isLegalMove(self, tile1, tile2):
         """ Checks if tile2 is a legal move for the piece on tile1 """
@@ -102,6 +188,86 @@ class Board:
         pos += chr(tile1%self.boardWidth+97)
         pos += str(self.boardWidth - int(tile1/self.boardWidth))
         return pos
+    
+    def canCastle(self, tile1):
+        """ Returns a list of any castling moves a given king can make
+        So... this is gonna get a little weird.
+        I want to preserve the ability to handle non standard sized boards
+        The way I see it, here's the logic:
+        - King cannot move
+        - The closest rook to the king to the left and right of him I'll call his castling rooks
+        - Castling rook can't have moved
+        - The king, and none of the squares between him and his destination can be in check (this will be a lowkey expensive calc)
+        - After castling, the king should move to ceil(abs(R-K) / 2)
+        - Where R is the rook's index, and K the king's. The rook should be placed next to king either +1 if queenside castle or -1"""
+        moves = []
+        # Black King castling rights
+        if self.getTile(tile1) == 'k':
+            # Kingside rook and the king haven't moved
+            if self.castling.find('k') >= 0:
+                kingsquare = tile1 + math.ceil(abs(tile1 - self.castlingrooks['bk'])/2)
+                self.castlingmoves.append(kingsquare)
+                # Check each tile between the king and the square he wants to move to, inclusive
+                valid = True
+                if self.enemySeesTile(kingsquare):
+                    valid = False
+                for i in range(tile1+1, kingsquare):
+                    if i != 0 or self.enemySeesTile(i):
+                        valid = False
+                if valid:
+                    moves.append(kingsquare)
+            # Queenside rook and the king haven't moved
+            if self.castling.find('q') >= 0:
+                kingsquare = tile1 - math.ceil(abs(tile1 - self.castlingrooks['bq'])/2)
+                self.castlingmoves.append(kingsquare)
+                valid = True
+                if self.enemySeesTile(kingsquare):
+                    valid = False
+                for i in range(kingsquare, tile1):
+                    if self.getTile(i) != 0 or self.enemySeesTile(i):
+                        valid = False
+                if valid:
+                    moves.append(kingsquare)
+                    moves.append(tile1 - math.ceil(abs(tile1 - self.castlingrooks['bq'])/2))
+        
+        # White King castling rights
+        if self.getTile(tile1) == 'K':
+            # Kingside rook and the king haven't moved
+            if self.castling.find('K') >= 0:
+                kingsquare = tile1 + math.ceil(abs(tile1 - self.castlingrooks['wk'])/2)
+                self.castlingmoves.append(kingsquare)
+                # Check each tile between the king and the square he wants to move to, inclusive
+                valid = True
+                if self.enemySeesTile(kingsquare):
+                    valid = False
+                for i in range(tile1+1, kingsquare):
+                    if self.getTile(i) != 0 or self.enemySeesTile(i):
+                        valid = False
+                if valid:
+                    moves.append(kingsquare)
+            # Queenside rook and the king haven't moved
+            if self.castling.find('Q') >= 0:
+                # Check for checks here
+                kingsquare = tile1 - math.ceil(abs(tile1 - self.castlingrooks['wq'])/2)
+                self.castlingmoves.append(kingsquare)
+                valid = True
+                if self.enemySeesTile(kingsquare):
+                    valid = False
+                for i in range(kingsquare, tile1):
+                    if self.getTile(i) != 0 or self.enemySeesTile(i):
+                        valid = False
+                if valid:
+                    moves.append(kingsquare)
+        return moves
+    
+    def enemySeesTile(self, tile1):
+        """ Returns true if other player can see a given tile index """
+        # At least, it would...if it didn't recurse infinitely
+        return False
+        self.active = 'w' if self.active == 'b' else 'b'
+        moves = self.allLegalMoves(False, False)
+        self.active = 'w' if self.active == 'b' else 'b'
+        return True if tile1 in moves.values() else False
     
     def getLegalMoves(self, tile1, discAtk=True):
         """ Returns an array of all available legal moves for a given piece, by tile index """
@@ -265,6 +431,8 @@ class Board:
                 # Down right
                 if (tile1+self.boardWidth+1 >= 0 and tile1+self.boardWidth+1 < len(self.tiles) and (tile1+self.boardWidth+1 == 0 or self.getTileColor(tile1+self.boardWidth+1) != self.getTileColor(tile1) ) and (tile1+self.boardWidth+1)%self.boardWidth != 0):
                     moves.append(tile1+self.boardWidth+1)
+                # Castling
+                moves.extend(self.canCastle(tile1))
             elif piece.lower() == 'q':
                 # Queen
                 # Queen code is straightup copy pasted bishop + rook
@@ -356,7 +524,7 @@ class Board:
             if self.getTile(i) == 'k' or self.getTile(i) == 'K':
                 movelist = self.allLegalMoves(False, False)
                 # if i in movelist.values():
-                if i in {x for v in movelist.values() for x in v}:
+                if i in [x for v in movelist.values() for x in v]:
                     self.active = 'w' if self.active == 'b' else 'b'
                     self.tiles[tile1] = t1_piece
                     self.tiles[tile2] = t2_piece

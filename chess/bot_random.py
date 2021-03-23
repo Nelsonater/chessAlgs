@@ -1,12 +1,9 @@
 from board import Board
+from aibase import AIBaseClass
 import random
 
-class ChessRandom:
-    def __init__(self, board, color):
-        self.board = board
-        self.color = color
-    
-    def nextMove(self):
+class ChessRandom(AIBaseClass):
+    def getNextMove(self):
         possibleMoves = self.board.allLegalMoves()
         if len(possibleMoves) == 0:
             return

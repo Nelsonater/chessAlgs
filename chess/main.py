@@ -94,19 +94,19 @@ def drawCheckmate(board, win):
     win.getMouse()
         
 def main():
-    myboard = Board()
+    myboard = Board(8)
     comp = ChessRandom(myboard, 'b')
     print(myboard.outputFEN())
     win = GraphWin('Chess', WIDTH, HEIGHT)
     while not win.isClosed():
         drawBoard(myboard, win)
-        if myboard.isCheckmate:
+        if myboard.gamestate != 0:
             print("Checkmate!")
             drawCheckmate(myboard, win)
         if myboard.active == 'w':
             getNextMove(myboard, win)
         else:
-            comp.nextMove()
+            comp.getNextMove()
         # print(myboard.allLegalMoves(True))
         win.update()
         time.sleep(.1)
