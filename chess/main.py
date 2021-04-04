@@ -2,6 +2,8 @@ from graphics import GraphWin, Rectangle, Point, Text, color_rgb, Image, Circle
 from bot_random import ChessRandom
 from board import Board
 import time
+import sys
+import re
 
 WIDTH = 600
 HEIGHT = 600
@@ -92,25 +94,61 @@ def drawCheckmate(board, win):
     message = Text(Point(WIDTH/2, HEIGHT/2), "Checkmate!")
     message.draw(win)
     win.getMouse()
+
+def cliNextMove(board):
+    movepattern = re.compile("[a-h][1-8] [a-h][1-8]")
+    move = input("Enter move: ")
+    while not movepattern.search(move):
+        print("Enter move by giving board position of piece you want")
+        print("to move and tile you want to move to. Eg. e2 e4")
+        move = input("Enter move: ")
+    tile1 = board.notationToIndex(move.split()[0])
+    tile2 = board.notationToIndex(move.split()[1])
+    return True if board.movePiece(tile1, tile2) else cliNextMove(board)
         
 def main():
-    myboard = Board(8)
-    comp = ChessRandom(myboard, 'b')
-    print(myboard.outputFEN())
-    win = GraphWin('Chess', WIDTH, HEIGHT)
-    while not win.isClosed():
-        drawBoard(myboard, win)
-        if myboard.gamestate != 0:
-            print("Checkmate!")
-            drawCheckmate(myboard, win)
-        if myboard.active == 'w':
-            getNextMove(myboard, win)
-        else:
-            comp.getNextMove()
-        # print(myboard.allLegalMoves(True))
-        win.update()
-        time.sleep(.1)
-    win.close()
+    gui = False
+    if len(sys.argv) > 1:
+        if str(sys.argv[1]) == 'cli':
+            gui = False
+    if(gui):
+        myboard = Board(8)
+        comp = ChessRandom(myboard, 'b')
+        print(myboard.outputFEN())
+        win = GraphWin('Chess', WIDTH, HEIGHT)
+        while not win.isClosed():
+            drawBoard(myboard, win)
+            if myboard.gamestate != 0:
+                print("Checkmate!")
+                drawCheckmate(myboard, win)
+            if myboard.active == 'w':
+                getNextMove(myboard, win)
+            else:
+                comp.getNextMove()
+            # print(myboard.allLegalMoves(True))
+            win.update()
+            time.sleep(.1)
+        win.close()
+    else:
+        boardSize = 8
+        if len(sys.argv) > 2:
+            boardSize = int(sys.argv[2])
+        myboard = Board(boardSize)
+        comp = ChessRandom(myboard, 'b')
+        print(myboard.outputFEN())
+        while myboard.gamestate == 0:
+            print(myboard.asciiBoard())
+            if myboard.active == 'w':
+                cliNextMove(myboard)
+            else:
+                comp.getNextMove()
+        print(myboard.asciiBoard())
+        if myboard.gamestate == 1:
+            print("Game Over! Black Wins!")
+        if myboard.gamestate == 2:
+            print("Game Over! White Wins!")
+        if myboard.gamestate == 3:
+            print("Game Over! Draw!")
 
 if __name__ == "__main__":
     main()

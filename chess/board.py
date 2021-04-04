@@ -79,10 +79,10 @@ class Board:
     #     Then if we assume boardWidth of 8, 8-5-1 = 2
     # c5 expected val. 2+2*8 = 18
     # a[0-7], b[8-15], c[16-23]
-    def getTile(self, pos):
+    def getTile(self, pos, getIndex=False):
         """ Gets the integer value for the piece at a given board position
             I couldn't decide if this function should be called with a tile index or standard notation
-            ...so I just did both"""
+            ...so I just did both. Optional param index to instead return tile index"""
         if type(pos) is int:
             return self.tiles[pos]
         if len(pos) != 2:
@@ -93,7 +93,8 @@ class Board:
         # Subtract the rank int from second char from boardWidth (which is also the height in this case, cause we index top left to bottom right)
         # Multiply the result by boardwidth to adjust for the 2d tiles list
         tile += (self.boardWidth - int(pos[1]))*self.boardWidth
-        return self.tiles[tile]
+        print(f"Translated {pos} to {tile}")
+        return self.tiles[tile] if getIndex == False else tile
     
     def getTileColor(self, tile1):
         if self.getTile(tile1) == 0:
@@ -104,15 +105,18 @@ class Board:
         if tile1 >= 0 and tile1 < len(self.tiles):
             self.tiles[tile1] = piece
     
-    def printBoard(self):
+    def asciiBoard(self):
         """ Debug tool to print board to console """
         # TODO: Fix, make it look better, build and return a string instead of printing
-        rank = ''
+        board = ''
         for i, t in enumerate(self.tiles):
-            rank = str(t) + ' ' + rank 
-            if i % self.boardWidth == 0:
-                print(rank)
-                rank = ''
+            if t == 0:
+                board += '*'
+            else:
+                board += str(t)
+            if (i+1) % self.boardWidth == 0:
+                board += '\n'
+        return board
     
     def movePiece(self, tile1, tile2):
         if self.isLegalMove(tile1, tile2):
@@ -160,6 +164,8 @@ class Board:
             self.active = 'w' if self.active == 'b' else 'b'
             if len([x for x in self.allLegalMoves().values() if len(x) > 0]) == 0:
                 self.gamestate = 1 if self.active == 'w' else 2
+            return True
+        return False
     
     def isLegalMove(self, tile1, tile2):
         """ Checks if tile2 is a legal move for the piece on tile1 """
@@ -188,6 +194,9 @@ class Board:
         pos += chr(tile1%self.boardWidth+97)
         pos += str(self.boardWidth - int(tile1/self.boardWidth))
         return pos
+    
+    def notationToIndex(self, tile1):
+        return self.getTile(tile1, True)
     
     def canCastle(self, tile1):
         """ Returns a list of any castling moves a given king can make
