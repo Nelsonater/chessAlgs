@@ -1,5 +1,6 @@
 from graphics import GraphWin, Rectangle, Point, Text, color_rgb, Image, Circle
-from bot_random import ChessRandom
+from bot_random import BotRandom
+from bot_heuristic import BotHeuristic
 from board import Board
 import time
 import sys
@@ -105,7 +106,7 @@ def cliNextMove(board):
     tile1 = board.notationToIndex(move.split()[0])
     tile2 = board.notationToIndex(move.split()[1])
     return True if board.movePiece(tile1, tile2) else cliNextMove(board)
-        
+
 def main():
     gui = False
     if len(sys.argv) > 1:
@@ -113,7 +114,7 @@ def main():
             gui = False
     if(gui):
         myboard = Board(8)
-        comp = ChessRandom(myboard, 'b')
+        comp = BotRandom(myboard, 'b')
         print(myboard.outputFEN())
         win = GraphWin('Chess', WIDTH, HEIGHT)
         while not win.isClosed():
@@ -134,7 +135,7 @@ def main():
         if len(sys.argv) > 2:
             boardSize = int(sys.argv[2])
         myboard = Board(boardSize)
-        comp = ChessRandom(myboard, 'b')
+        comp = BotHeuristic(myboard, 'b')
         print(myboard.outputFEN())
         while myboard.gamestate == 0:
             print(myboard.asciiBoard())

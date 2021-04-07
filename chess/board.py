@@ -16,7 +16,7 @@ bot_random.py
 
 """
 class Board:
-    def __init__(self, boardwidth=8):
+    def __init__(self, boardwidth=8, ruleset='standard'):
         """ Board is essentially represented by a list of chars
         I chose to represent this a 2d array starting at a8 (top left) and ending h1 (bottom right)
         Even though it hurt my brain a little, this system matches fen better so :shrug:
@@ -93,7 +93,7 @@ class Board:
         # Subtract the rank int from second char from boardWidth (which is also the height in this case, cause we index top left to bottom right)
         # Multiply the result by boardwidth to adjust for the 2d tiles list
         tile += (self.boardWidth - int(pos[1]))*self.boardWidth
-        print(f"Translated {pos} to {tile}")
+        # print(f"Translated {pos} to {tile}")
         return self.tiles[tile] if getIndex == False else tile
     
     def getTileColor(self, tile1):
@@ -218,10 +218,10 @@ class Board:
                 self.castlingmoves.append(kingsquare)
                 # Check each tile between the king and the square he wants to move to, inclusive
                 valid = True
-                if self.enemySeesTile(kingsquare):
+                if self.playerSeesTile(kingsquare, 'w'):
                     valid = False
                 for i in range(tile1+1, kingsquare):
-                    if i != 0 or self.enemySeesTile(i):
+                    if i != 0 or self.playerSeesTile(i, 'w'):
                         valid = False
                 if valid:
                     moves.append(kingsquare)
@@ -230,10 +230,10 @@ class Board:
                 kingsquare = tile1 - math.ceil(abs(tile1 - self.castlingrooks['bq'])/2)
                 self.castlingmoves.append(kingsquare)
                 valid = True
-                if self.enemySeesTile(kingsquare):
+                if self.playerSeesTile(kingsquare, 'w'):
                     valid = False
                 for i in range(kingsquare, tile1):
-                    if self.getTile(i) != 0 or self.enemySeesTile(i):
+                    if self.getTile(i) != 0 or self.playerSeesTile(i, 'w'):
                         valid = False
                 if valid:
                     moves.append(kingsquare)
@@ -247,10 +247,10 @@ class Board:
                 self.castlingmoves.append(kingsquare)
                 # Check each tile between the king and the square he wants to move to, inclusive
                 valid = True
-                if self.enemySeesTile(kingsquare):
+                if self.playerSeesTile(kingsquare, 'b'):
                     valid = False
                 for i in range(tile1+1, kingsquare):
-                    if self.getTile(i) != 0 or self.enemySeesTile(i):
+                    if self.getTile(i) != 0 or self.playerSeesTile(i, 'b'):
                         valid = False
                 if valid:
                     moves.append(kingsquare)
@@ -260,16 +260,16 @@ class Board:
                 kingsquare = tile1 - math.ceil(abs(tile1 - self.castlingrooks['wq'])/2)
                 self.castlingmoves.append(kingsquare)
                 valid = True
-                if self.enemySeesTile(kingsquare):
+                if self.playerSeesTile(kingsquare, 'b'):
                     valid = False
                 for i in range(kingsquare, tile1):
-                    if self.getTile(i) != 0 or self.enemySeesTile(i):
+                    if self.getTile(i) != 0 or self.playerSeesTile(i, 'b'):
                         valid = False
                 if valid:
                     moves.append(kingsquare)
         return moves
     
-    def enemySeesTile(self, tile1):
+    def playerSeesTile(self, tile1, playerColor):
         """ Returns true if other player can see a given tile index """
         # At least, it would...if it didn't recurse infinitely
         return False
@@ -597,3 +597,6 @@ class Board:
         placement = placement[:-1]
 
         return placement
+    
+    def getTiles(self):
+        return self.tiles

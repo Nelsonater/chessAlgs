@@ -2,7 +2,7 @@ from board import Board
 from aibase import AIBaseClass
 import random
 
-class ChessRandom(AIBaseClass):
+class BotRandom(AIBaseClass):
     def getNextMove(self):
         possibleMoves = self.board.allLegalMoves()
         if len(possibleMoves) == 0:
